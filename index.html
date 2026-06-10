@@ -20,7 +20,7 @@
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             font-family: 'Arial', sans-serif;
             color: white;
-            overflow: hidden;
+            overflow-y: auto;
         }
 
         h1 {
@@ -34,6 +34,102 @@
             text-align: center;
             font-size: 12px;
             opacity: 0.9;
+        }
+
+        /* Setup Screen */
+        #setupScreen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .setup-box {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 20px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .setup-box h2 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        .setup-box input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .setup-box input::placeholder {
+            color: #999;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-start {
+            background: #4ecdc4;
+            color: #0a0e27;
+        }
+
+        .btn-start:hover {
+            background: #45b3ab;
+        }
+
+        .btn-start:disabled {
+            background: #999;
+            cursor: not-allowed;
+        }
+
+        .btn-history {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-history:hover {
+            background: #ff5252;
+        }
+
+        .btn-back {
+            background: #666;
+            color: white;
+        }
+
+        .btn-back:hover {
+            background: #555;
+        }
+
+        /* Game Screen */
+        #gameScreen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
         }
 
         canvas {
@@ -89,6 +185,60 @@
             line-height: 1.4;
         }
 
+        /* History Screen */
+        #historyScreen {
+            display: none;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .history-container {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #4ecdc4;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .history-item .winner-name {
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .history-item .score {
+            color: #4ecdc4;
+            margin: 5px 0 0 0;
+        }
+
+        .history-item .time {
+            color: #999;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .empty-history {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+        }
+
+        .clear-history-btn {
+            background: #ff6b6b;
+            color: white;
+            width: 100%;
+            margin-top: 10px;
+        }
+
         @media (max-width: 768px) {
             body {
                 padding: 5px;
@@ -120,34 +270,79 @@
             canvas {
                 border: 2px solid white;
             }
+
+            .setup-box {
+                padding: 15px;
+            }
         }
     </style>
 </head>
 <body>
     <h1>🎾 PONG 🎾</h1>
-    <div class="info">
-        <p>PC: Mus + venstreklikk | Mobil: Berør skjermen</p>
+
+    <!-- Setup Screen -->
+    <div id="setupScreen" class="setup-screen">
+        <div class="info">
+            <p>Skriv inn navn på spillerne</p>
+        </div>
+
+        <div class="setup-box">
+            <h2>Spiller 1 (Rødt)</h2>
+            <input type="text" id="player1Name" placeholder="Navn på Spiller 1" maxlength="15">
+        </div>
+
+        <div class="setup-box">
+            <h2>Spiller 2 (Turkis)</h2>
+            <input type="text" id="player2Name" placeholder="Navn på Spiller 2" maxlength="15">
+        </div>
+
+        <div class="button-container">
+            <button class="btn-start" id="startBtn" onclick="startGame()">Start Kamp</button>
+            <button class="btn-history" id="historyBtn" onclick="showHistory()">📊 Historikk</button>
+        </div>
     </div>
 
-    <canvas id="gameCanvas" width="800" height="400"></canvas>
-
-    <div class="score-container">
-        <div class="player player1">
-            <div>Spiller 1</div>
-            <div id="score1">0</div>
+    <!-- Game Screen -->
+    <div id="gameScreen">
+        <div class="info">
+            <p id="gameInfo">PC: Mus + venstreklikk | Mobil: Berør skjermen</p>
         </div>
-        <div class="player player2">
-            <div>Spiller 2</div>
-            <div id="score2">0</div>
+
+        <canvas id="gameCanvas" width="800" height="400"></canvas>
+
+        <div class="score-container">
+            <div class="player player1">
+                <div id="player1NameDisplay">Spiller 1</div>
+                <div id="score1">0</div>
+            </div>
+            <div class="player player2">
+                <div id="player2NameDisplay">Spiller 2</div>
+                <div id="score2">0</div>
+            </div>
+        </div>
+
+        <div id="winner"></div>
+
+        <div class="controls">
+            <p><strong>PC:</strong> Mus opp/ned + klikk for serve | Piler + venstrepil for serve</p>
+            <p><strong>Mobil:</strong> Berør venstre side (Spiller 1) eller høyre side (Spiller 2)</p>
         </div>
     </div>
 
-    <div id="winner"></div>
+    <!-- History Screen -->
+    <div id="historyScreen">
+        <div class="info">
+            <h2 style="margin: 0;">Kamphistorikk</h2>
+        </div>
 
-    <div class="controls">
-        <p><strong>PC:</strong> Mus opp/ned + klikk for serve | Piler + venstrepil for serve</p>
-        <p><strong>Mobil:</strong> Berør venstre side (Spiller 1) eller høyre side (Spiller 2) for å bevege racketen</p>
-        <p><strong>Mål:</strong> Først til 10 poeng vinner!</p>
+        <div class="history-container" id="historyContainer">
+            <div class="empty-history">Ingen kamper registrert ennå</div>
+        </div>
+
+        <div class="button-container">
+            <button class="btn-back" onclick="backToSetup()">Tilbake</button>
+            <button class="clear-history-btn" onclick="clearHistory()">Slett historikk</button>
+        </div>
     </div>
 
     <script src="game.js"></script>
