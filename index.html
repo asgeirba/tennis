@@ -2,12 +2,16 @@
 <html lang="no">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
     <title>Pong - 2D Tennis Spill</title>
     <style>
+        * {
+            touch-action: none;
+        }
+
         body {
             margin: 0;
-            padding: 20px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -16,17 +20,19 @@
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             font-family: 'Arial', sans-serif;
             color: white;
+            overflow: hidden;
         }
 
         h1 {
-            margin-bottom: 10px;
+            margin: 5px 0;
+            font-size: 24px;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
         }
 
         .info {
-            margin-bottom: 20px;
+            margin: 5px 0 10px 0;
             text-align: center;
-            font-size: 14px;
+            font-size: 12px;
             opacity: 0.9;
         }
 
@@ -35,19 +41,22 @@
             background: #0a0e27;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
             cursor: none;
+            max-width: 100%;
+            height: auto;
+            display: block;
         }
 
         .score-container {
-            margin-top: 20px;
+            margin-top: 10px;
             display: flex;
             gap: 40px;
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
             text-align: center;
         }
 
         .player {
-            min-width: 150px;
+            min-width: 120px;
         }
 
         .player.player1 {
@@ -59,8 +68,8 @@
         }
 
         .winner {
-            margin-top: 30px;
-            font-size: 28px;
+            margin-top: 20px;
+            font-size: 24px;
             font-weight: bold;
             color: #ffd700;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
@@ -73,29 +82,62 @@
         }
 
         .controls {
-            margin-top: 20px;
-            font-size: 12px;
+            margin-top: 10px;
+            font-size: 11px;
             opacity: 0.7;
             text-align: center;
-            line-height: 1.6;
+            line-height: 1.4;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+
+            h1 {
+                font-size: 18px;
+            }
+
+            .info {
+                font-size: 11px;
+            }
+
+            .score-container {
+                gap: 30px;
+                font-size: 18px;
+                margin-top: 5px;
+            }
+
+            .player {
+                min-width: 100px;
+            }
+
+            .controls {
+                font-size: 10px;
+                margin-top: 5px;
+            }
+
+            canvas {
+                border: 2px solid white;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>🎾 PONG - Tennis fra Øverst 🎾</h1>
+    <h1>🎾 PONG 🎾</h1>
     <div class="info">
-        <p>Klikk på leke-området for å fokusere, så er du klar til å spille!</p>
+        <p>PC: Mus + venstreklikk | Mobil: Berør skjermen</p>
     </div>
 
     <canvas id="gameCanvas" width="800" height="400"></canvas>
 
     <div class="score-container">
         <div class="player player1">
-            <div>Spiller 1 (Mus)</div>
+            <div>Spiller 1</div>
             <div id="score1">0</div>
         </div>
         <div class="player player2">
-            <div>Spiller 2 (Piltaster)</div>
+            <div>Spiller 2</div>
             <div id="score2">0</div>
         </div>
     </div>
@@ -103,8 +145,8 @@
     <div id="winner"></div>
 
     <div class="controls">
-        <p><strong>Spiller 1 (Venstre):</strong> Beveg musen opp/ned, venstreklikk for å serve</p>
-        <p><strong>Spiller 2 (Høyre):</strong> Pil opp/ned, venstrepil for å serve</p>
+        <p><strong>PC:</strong> Mus opp/ned + klikk for serve | Piler + venstrepil for serve</p>
+        <p><strong>Mobil:</strong> Berør venstre side (Spiller 1) eller høyre side (Spiller 2) for å bevege racketen</p>
         <p><strong>Mål:</strong> Først til 10 poeng vinner!</p>
     </div>
 
