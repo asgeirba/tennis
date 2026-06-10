@@ -41,6 +41,25 @@ const ball = {
 // Inngang-kontroll
 const keys = {};
 const mouse = { x: gameWidth / 2, y: gameHeight / 2 };
+const touch = { active: false, y: gameHeight / 2 };
+
+// Touch-områder for mobilstyring
+const touchZones = {
+    player1: {
+        x: 0,
+        y: 0,
+        width: gameWidth / 2,
+        height: gameHeight
+    },
+    player2: {
+        x: gameWidth / 2,
+        y: 0,
+        width: gameWidth / 2,
+        height: gameHeight
+    }
+};
+
+// ============== KEYBOARD / MOUSE EVENTS ==============
 
 document.addEventListener('keydown', (e) => {
     keys[e.key] = true;
@@ -58,6 +77,7 @@ document.addEventListener('keyup', (e) => {
 document.addEventListener('mousemove', (e) => {
     const rect = canvas.getBoundingClientRect();
     mouse.y = e.clientY - rect.top;
+    mouse.x = e.clientX - rect.left;
 });
 
 canvas.addEventListener('click', (e) => {
@@ -66,6 +86,52 @@ canvas.addEventListener('click', (e) => {
         serveBall(player1);
     }
 });
+
+// ============== TOUCH EVENTS ==============
+
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const touch_obj = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const touchX = touch_obj.clientX - rect.left;
+    const touchY = touch_obj.clientY - rect.top;
+    
+    touch.active = true;
+    touch.y = touchY;
+    touch.x = touchX;
+    
+    // Sjekk hvilken side av skjermen som er berørt
+    if (touchX < gameWidth / 2) {
+        // Venstre side - Spiller 1
+        if (player1.isServing) {
+            serveBall(player1);
+        }
+    } else {
+        // Høyre side - Spiller 2
+        if (player2.isServing) {
+            serveBall(player2);
+        }
+    }
+}, false);
+
+canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    const touch_obj = e.touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const touchX = touch_obj.clientX - rect.left;
+    const touchY = touch_obj.clientY - rect.top;
+    
+    touch.active = true;
+    touch.y = touchY;
+    touch.x = touchX;
+}, false);
+
+canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    touch.active = false;
+}, false);
+
+// ============== SERVE & RESET ==============
 
 function serveBall(player) {
     const angle = (Math.random() - 0.5) * Math.PI / 4; // -22.5 til 22.5 grader
@@ -87,18 +153,35 @@ function resetBall(winner) {
     }
 }
 
-function updatePlayerPositions() {
-    // Spiller 1 - mus kontroll
-    if (mouse.y - racketHeight / 2 < gameHeight - racketHeight) {
-        player1.y = Math.max(0, Math.min(mouse.y - racketHeight / 2, gameHeight - racketHeight));
-    }
+// ============== UPDATE LOGIC ==============
 
-    // Spiller 2 - piltast kontroll
-    if (keys['ArrowUp']) {
-        player2.y = Math.max(0, player2.y - racketSpeed);
+function updatePlayerPositions() {
+    // Spiller 1 - mus eller touch kontroll (venstre side)
+    let player1Target = player1.y;
+    
+    if (touch.active && touch.x < gameWidth / 2) {
+        // Touch på venstre side
+        player1Target = Math.max(0, Math.min(touch.y - racketHeight / 2, gameHeight - racketHeight));
+    } else if (!touch.active) {
+        // Mus kontroll
+        if (mouse.y - racketHeight / 2 < gameHeight - racketHeight) {
+            player1Target = Math.max(0, Math.min(mouse.y - racketHeight / 2, gameHeight - racketHeight));
+        }
     }
-    if (keys['ArrowDown']) {
-        player2.y = Math.min(gameHeight - racketHeight, player2.y + racketSpeed);
+    player1.y = player1Target;
+
+    // Spiller 2 - piltaster eller touch kontroll (høyre side)
+    if (touch.active && touch.x >= gameWidth / 2) {
+        // Touch på høyre side
+        player2.y = Math.max(0, Math.min(touch.y - racketHeight / 2, gameHeight - racketHeight));
+    } else {
+        // Piltast kontroll
+        if (keys['ArrowUp']) {
+            player2.y = Math.max(0, player2.y - racketSpeed);
+        }
+        if (keys['ArrowDown']) {
+            player2.y = Math.min(gameHeight - racketHeight, player2.y + racketSpeed);
+        }
     }
 }
 
@@ -192,6 +275,8 @@ function resetGame() {
     }, 3000);
 }
 
+// ============== DRAWING ==============
+
 function draw() {
     // Tegn bakgrunn
     ctx.fillStyle = '#0a0e27';
@@ -224,10 +309,18 @@ function draw() {
     ctx.font = '14px Arial';
     ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
     if (player1.isServing) {
-        ctx.fillText('Klikk for å serve', player1.x + 30, player1.y - 10);
+        ctx.fillText('Klikk/berør for å serve', player1.x + 30, player1.y - 10);
     }
     if (player2.isServing) {
-        ctx.fillText('← for å serve', player2.x - 100, player2.y - 10);
+        ctx.fillText('← / Berør for å serve', player2.x - 120, player2.y - 10);
+    }
+
+    // Tegn touch-områder hint på mobil
+    if (touch.active) {
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(0, 0, gameWidth / 2, gameHeight);
+        ctx.strokeRect(gameWidth / 2, 0, gameWidth / 2, gameHeight);
     }
 }
 
