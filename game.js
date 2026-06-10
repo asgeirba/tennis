@@ -1,9 +1,9 @@
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+let canvas;
+let ctx;
 
 // Spill-variabler
-const gameWidth = canvas.width;
-const gameHeight = canvas.height;
+let gameWidth;
+let gameHeight;
 
 // Racket
 const racketWidth = 10;
@@ -15,7 +15,7 @@ let player2Name = 'Spiller 2';
 
 const player1 = {
     x: 20,
-    y: gameHeight / 2 - racketHeight / 2,
+    y: 0,
     width: racketWidth,
     height: racketHeight,
     score: 0,
@@ -23,8 +23,8 @@ const player1 = {
 };
 
 const player2 = {
-    x: gameWidth - 30,
-    y: gameHeight / 2 - racketHeight / 2,
+    x: 0,
+    y: 0,
     width: racketWidth,
     height: racketHeight,
     score: 0,
@@ -33,8 +33,8 @@ const player2 = {
 
 // Ball
 const ball = {
-    x: gameWidth / 2,
-    y: gameHeight / 2,
+    x: 400,
+    y: 200,
     radius: 6,
     speedX: 0,
     speedY: 0,
@@ -43,8 +43,30 @@ const ball = {
 
 // Inngang-kontroll
 const keys = {};
-const mouse = { x: gameWidth / 2, y: gameHeight / 2 };
-const touch = { active: false, y: gameHeight / 2 };
+const mouse = { x: 400, y: 200 };
+const touch = { active: false, y: 200 };
+
+// ============== INITIALIZATION ==============
+
+function initGame() {
+    canvas = document.getElementById('gameCanvas');
+    ctx = canvas.getContext('2d');
+    
+    gameWidth = canvas.width;
+    gameHeight = canvas.height;
+    
+    player1.y = gameHeight / 2 - racketHeight / 2;
+    player1.x = 20;
+    
+    player2.y = gameHeight / 2 - racketHeight / 2;
+    player2.x = gameWidth - 30;
+    
+    ball.x = gameWidth / 2;
+    ball.y = gameHeight / 2;
+    
+    // Start game loop
+    gameLoop();
+}
 
 // ============== SCREEN MANAGEMENT ==============
 
@@ -162,26 +184,36 @@ document.addEventListener('keyup', (e) => {
 });
 
 document.addEventListener('mousemove', (e) => {
+    if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
     mouse.y = e.clientY - rect.top;
     mouse.x = e.clientX - rect.left;
 });
 
-canvas.addEventListener('click', (e) => {
-    // Spiller 1 serve med museklikk
-    if (player1.isServing) {
-        serveBall(player1);
+document.addEventListener('click', (e) => {
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
+    
+    if (clickX >= 0 && clickX < gameWidth && clickY >= 0 && clickY < gameHeight) {
+        if (player1.isServing) {
+            serveBall(player1);
+        }
     }
 });
 
 // ============== TOUCH EVENTS ==============
 
-canvas.addEventListener('touchstart', (e) => {
+document.addEventListener('touchstart', (e) => {
+    if (!canvas) return;
     e.preventDefault();
     const touch_obj = e.touches[0];
     const rect = canvas.getBoundingClientRect();
     const touchX = touch_obj.clientX - rect.left;
     const touchY = touch_obj.clientY - rect.top;
+    
+    if (touchX < 0 || touchX > gameWidth || touchY < 0 || touchY > gameHeight) return;
     
     touch.active = true;
     touch.y = touchY;
@@ -201,19 +233,22 @@ canvas.addEventListener('touchstart', (e) => {
     }
 }, false);
 
-canvas.addEventListener('touchmove', (e) => {
+document.addEventListener('touchmove', (e) => {
+    if (!canvas) return;
     e.preventDefault();
     const touch_obj = e.touches[0];
     const rect = canvas.getBoundingClientRect();
     const touchX = touch_obj.clientX - rect.left;
     const touchY = touch_obj.clientY - rect.top;
     
+    if (touchX < 0 || touchX > gameWidth || touchY < 0 || touchY > gameHeight) return;
+    
     touch.active = true;
     touch.y = touchY;
     touch.x = touchX;
 }, false);
 
-canvas.addEventListener('touchend', (e) => {
+document.addEventListener('touchend', (e) => {
     e.preventDefault();
     touch.active = false;
 }, false);
@@ -354,6 +389,8 @@ function checkWinner() {
 // ============== DRAWING ==============
 
 function draw() {
+    if (!ctx) return;
+    
     // Tegn bakgrunn
     ctx.fillStyle = '#0a0e27';
     ctx.fillRect(0, 0, gameWidth, gameHeight);
@@ -407,5 +444,5 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// Start game loop når side lastes
-gameLoop();
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', initGame);
