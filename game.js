@@ -10,6 +10,9 @@ const racketWidth = 10;
 const racketHeight = 80;
 const racketSpeed = 6;
 
+let player1Name = 'Spiller 1';
+let player2Name = 'Spiller 2';
+
 const player1 = {
     x: 20,
     y: gameHeight / 2 - racketHeight / 2,
@@ -43,21 +46,105 @@ const keys = {};
 const mouse = { x: gameWidth / 2, y: gameHeight / 2 };
 const touch = { active: false, y: gameHeight / 2 };
 
-// Touch-områder for mobilstyring
-const touchZones = {
-    player1: {
-        x: 0,
-        y: 0,
-        width: gameWidth / 2,
-        height: gameHeight
-    },
-    player2: {
-        x: gameWidth / 2,
-        y: 0,
-        width: gameWidth / 2,
-        height: gameHeight
+// ============== SCREEN MANAGEMENT ==============
+
+function startGame() {
+    player1Name = document.getElementById('player1Name').value.trim() || 'Spiller 1';
+    player2Name = document.getElementById('player2Name').value.trim() || 'Spiller 2';
+
+    // Oppdater navn på skjermen
+    document.getElementById('player1NameDisplay').textContent = player1Name;
+    document.getElementById('player2NameDisplay').textContent = player2Name;
+
+    // Bytt til game screen
+    document.getElementById('setupScreen').style.display = 'none';
+    document.getElementById('historyScreen').style.display = 'none';
+    document.getElementById('gameScreen').style.display = 'flex';
+
+    // Reset spillet
+    player1.score = 0;
+    player2.score = 0;
+    document.getElementById('score1').textContent = '0';
+    document.getElementById('score2').textContent = '0';
+    document.getElementById('winner').innerHTML = '';
+    resetBall(1);
+}
+
+function showHistory() {
+    document.getElementById('setupScreen').style.display = 'none';
+    document.getElementById('gameScreen').style.display = 'none';
+    document.getElementById('historyScreen').style.display = 'flex';
+
+    displayHistory();
+}
+
+function backToSetup() {
+    document.getElementById('setupScreen').style.display = 'flex';
+    document.getElementById('gameScreen').style.display = 'none';
+    document.getElementById('historyScreen').style.display = 'none';
+}
+
+function gameOver() {
+    setTimeout(() => {
+        const winner = player1.score === 10 ? player1Name : player2Name;
+        const loser = player1.score === 10 ? player2Name : player1Name;
+        const score = `${Math.max(player1.score, player2.score)}-${Math.min(player1.score, player2.score)}`;
+
+        // Lagre i historikk
+        saveMatchToHistory(winner, loser, score);
+
+        // Vis dialog eller gå tilbake
+        setTimeout(() => {
+            backToSetup();
+        }, 2000);
+    }, 3000);
+}
+
+// ============== HISTORIKK ==============
+
+function saveMatchToHistory(winner, loser, score) {
+    let history = JSON.parse(localStorage.getItem('pongHistory')) || [];
+    
+    const match = {
+        winner: winner,
+        loser: loser,
+        score: score,
+        timestamp: new Date().toLocaleString('no-NO')
+    };
+
+    history.unshift(match); // Legg til øverst
+    localStorage.setItem('pongHistory', JSON.stringify(history));
+}
+
+function displayHistory() {
+    const history = JSON.parse(localStorage.getItem('pongHistory')) || [];
+    const container = document.getElementById('historyContainer');
+
+    if (history.length === 0) {
+        container.innerHTML = '<div class="empty-history">Ingen kamper registrert ennå</div>';
+        return;
     }
-};
+
+    let html = '';
+    history.forEach((match, index) => {
+        html += `
+            <div class="history-item">
+                <span class="winner-name">🏆 ${match.winner}</span> vant over ${match.loser}
+                <div class="score">Resultat: ${match.score}</div>
+                <div class="time">${match.timestamp}</div>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+}
+
+function clearHistory() {
+    if (confirm('Er du sikker på at du vil slette all kamphistorikk?')) {
+        localStorage.removeItem('pongHistory');
+        displayHistory();
+    }
+}
 
 // ============== KEYBOARD / MOUSE EVENTS ==============
 
@@ -256,23 +343,12 @@ function checkWinner() {
     document.getElementById('score2').textContent = player2.score;
 
     if (player1.score === 10) {
-        document.getElementById('winner').innerHTML = '<div class="winner">🎉 Spiller 1 vinner! 🎉</div>';
-        resetGame();
+        document.getElementById('winner').innerHTML = '<div class="winner">🎉 ' + player1Name + ' vinner! 🎉</div>';
+        gameOver();
     } else if (player2.score === 10) {
-        document.getElementById('winner').innerHTML = '<div class="winner">🎉 Spiller 2 vinner! 🎉</div>';
-        resetGame();
+        document.getElementById('winner').innerHTML = '<div class="winner">🎉 ' + player2Name + ' vinner! 🎉</div>';
+        gameOver();
     }
-}
-
-function resetGame() {
-    setTimeout(() => {
-        player1.score = 0;
-        player2.score = 0;
-        document.getElementById('score1').textContent = '0';
-        document.getElementById('score2').textContent = '0';
-        document.getElementById('winner').innerHTML = '';
-        resetBall(Math.random() > 0.5 ? 1 : 2);
-    }, 3000);
 }
 
 // ============== DRAWING ==============
@@ -331,6 +407,5 @@ function gameLoop() {
     requestAnimationFrame(gameLoop);
 }
 
-// Start spillet
-resetBall(1);
+// Start game loop når side lastes
 gameLoop();
